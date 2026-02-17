@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'auth'          => \App\Filters\AuthFilter::class,
+        'admin'         => \App\Filters\AdminFilter::class,
     ];
 
     /**
@@ -110,6 +111,9 @@ class Filters extends BaseFilters
     public array $filters = [
         'auth' => ['before' => [
             'dashboard/*',
+        ]],
+        'admin' => ['before' => [
+            'dashboard/admin*',
         ]],
     ];
 }

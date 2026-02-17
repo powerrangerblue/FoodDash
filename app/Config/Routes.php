@@ -21,3 +21,7 @@ $routes->post('reset/(:any)', 'Auth::resetPassword/$1');
 // Dashboards (protected by filter)
 $routes->get('dashboard/admin', 'Dashboard::admin');
 $routes->get('dashboard/restaurant', 'Dashboard::restaurant');
+
+// Admin data endpoints
+$routes->get('dashboard/admin/data', 'Dashboard::adminData');
+$routes->post('dashboard/order/(:num)/status', 'Dashboard::updateOrderStatus/$1');

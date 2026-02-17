@@ -50,9 +50,4 @@
                 </div>
             </div>
 
-            <p class="text-muted text-center mt-3">Use <strong>admin@example.com</strong> / <em>AdminPass123</em> or <strong>restaurant@example.com</strong> / <em>RestaurantPass123</em></p>
-        </div>
-    </div>
-</div>
-</body>
-</html>
+           
