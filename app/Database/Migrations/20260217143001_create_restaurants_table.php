@@ -15,19 +15,30 @@ class CreateRestaurantsTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
+            'user_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'null'       => true,
+            ],
             'name' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '255',
             ],
             'address' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '512',
+                'constraint' => '255',
                 'null'       => true,
             ],
+            'status' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '50',
+                'default'    => 'pending',
+            ],
             'is_active' => [
-                'type'       => 'TINYINT',
+                'type'    => 'TINYINT',
                 'constraint' => 1,
-                'default'    => 1,
+                'default' => 1,
             ],
             'created_at' => [
                 'type' => 'DATETIME',

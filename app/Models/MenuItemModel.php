@@ -4,9 +4,9 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class RestaurantModel extends Model
+class MenuItemModel extends Model
 {
-    protected $table = 'restaurants';
+    protected $table = 'menu_items';
     protected $primaryKey = 'id';
 
     protected $useTimestamps = true;
@@ -14,11 +14,11 @@ class RestaurantModel extends Model
     protected $updatedField  = 'updated_at';
 
     protected $allowedFields = [
-        'user_id',
+        'restaurant_id',
         'name',
-        'address',
-        'status',
-        'is_active',
+        'description',
+        'price',
+        'is_available',
     ];
 
     protected $returnType = 'array';

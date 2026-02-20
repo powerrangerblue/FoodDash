@@ -1,0 +1,226 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Models\UserModel;
+use App\Models\RestaurantModel;
+use App\Models\DriverModel;
+
+class AdminManagement extends BaseController
+{
+    protected $userModel;
+    protected $restaurantModel;
+    protected $driverModel;
+
+    public function __construct()
+    {
+        $this->userModel = new UserModel();
+        $this->restaurantModel = new RestaurantModel();
+        $this->driverModel = new DriverModel();
+    }
+
+    /**
+     * Admin: View all users
+     */
+    public function users()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return redirect()->to('/login')->with('error', 'Unauthorized');
+        }
+
+        $users = $this->userModel->findAll();
+
+        return view('admin/users/index', ['users' => $users]);
+    }
+
+    /**
+     * Admin: Suspend user account
+     */
+    public function suspendUser($id)
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $user = $this->userModel->find($id);
+        if (!$user) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'User not found']);
+        }
+
+        $this->userModel->update($id, ['is_active' => 0]);
+
+        return $this->response->setJSON(['success' => true, 'message' => 'User suspended']);
+    }
+
+    /**
+     * Admin: Activate user account
+     */
+    public function activateUser($id)
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $user = $this->userModel->find($id);
+        if (!$user) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'User not found']);
+        }
+
+        $this->userModel->update($id, ['is_active' => 1]);
+
+        return $this->response->setJSON(['success' => true, 'message' => 'User activated']);
+    }
+
+    /**
+     * Admin: View pending restaurant registrations
+     */
+    public function pendingRestaurants()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return redirect()->to('/login')->with('error', 'Unauthorized');
+        }
+
+        $restaurants = $this->restaurantModel->where('status', 'pending')->findAll();
+
+        return view('admin/restaurants/pending', ['restaurants' => $restaurants]);
+    }
+
+    /**
+     * Admin: Approve restaurant
+     */
+    public function approveRestaurant($id)
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $restaurant = $this->restaurantModel->find($id);
+        if (!$restaurant) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Restaurant not found']);
+        }
+
+        $this->restaurantModel->update($id, ['status' => 'approved']);
+        if ($restaurant['user_id']) {
+            $this->userModel->update($restaurant['user_id'], ['is_active' => 1]);
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Restaurant approved']);
+    }
+
+    /**
+     * Admin: Reject restaurant
+     */
+    public function rejectRestaurant($id)
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $restaurant = $this->restaurantModel->find($id);
+        if (!$restaurant) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Restaurant not found']);
+        }
+
+        $this->restaurantModel->update($id, ['status' => 'rejected']);
+        if ($restaurant['user_id']) {
+            $this->userModel->update($restaurant['user_id'], ['is_active' => 0]);
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Restaurant rejected']);
+    }
+
+    /**
+     * Admin: View pending driver registrations
+     */
+    public function pendingDrivers()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return redirect()->to('/login')->with('error', 'Unauthorized');
+        }
+
+        $drivers = $this->driverModel->where('status', 'pending')->findAll();
+
+        return view('admin/drivers/pending', ['drivers' => $drivers]);
+    }
+
+    /**
+     * Admin: Approve driver
+     */
+    public function approveDriver($id)
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $driver = $this->driverModel->find($id);
+        if (!$driver) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Driver not found']);
+        }
+
+        $this->driverModel->update($id, ['status' => 'approved']);
+        if ($driver['user_id']) {
+            $this->userModel->update($driver['user_id'], ['is_active' => 1]);
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Driver approved']);
+    }
+
+    /**
+     * Admin: Reject driver
+     */
+    public function rejectDriver($id)
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $driver = $this->driverModel->find($id);
+        if (!$driver) {
+            return $this->response->setStatusCode(404)->setJSON(['error' => 'Driver not found']);
+        }
+
+        $this->driverModel->update($id, ['status' => 'rejected']);
+        if ($driver['user_id']) {
+            $this->userModel->update($driver['user_id'], ['is_active' => 0]);
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Driver rejected']);
+    }
+
+    /**
+     * Get revenue summary data (table format only)
+     */
+    public function getRevenueSummary()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('role') !== 'admin') {
+            return $this->response->setStatusCode(403)->setJSON(['error' => 'Unauthorized']);
+        }
+
+        $db = \Config\Database::connect();
+
+        // Revenue by restaurant (last 30 days)
+        $revenueByRestaurant = $db->query("
+            SELECT r.name, COUNT(o.id) as orders, IFNULL(SUM(o.total_amount), 0) as revenue
+            FROM orders o
+            JOIN restaurants r ON r.id = o.restaurant_id
+            WHERE o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            AND o.status = 'completed'
+            GROUP BY o.restaurant_id
+            ORDER BY revenue DESC
+        ")->getResultArray();
+
+        return $this->response->setJSON([
+            'revenueByRestaurant' => $revenueByRestaurant,
+        ]);
+    }
+}

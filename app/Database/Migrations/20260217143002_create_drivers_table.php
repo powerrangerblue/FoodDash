@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateUsersTable extends Migration
+class CreateDriversTable extends Migration
 {
     public function up()
     {
@@ -15,34 +15,30 @@ class CreateUsersTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'email' => [
+            'user_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'null'       => true,
+            ],
+            'name' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '255',
-                'null'       => false,
             ],
-            'password' => [
+            'phone' => [
                 'type'       => 'VARCHAR',
-                'constraint' => '255',
-                'null'       => false,
+                'constraint' => '20',
+                'null'       => true,
             ],
-            'role' => [
+            'status' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '50',
-                'default'    => 'restaurant',
+                'default'    => 'pending',
             ],
             'is_active' => [
-                'type'       => 'TINYINT',
+                'type'    => 'TINYINT',
                 'constraint' => 1,
-                'default'    => 1,
-            ],
-            'reset_token' => [
-                'type'       => 'VARCHAR',
-                'constraint' => '255',
-                'null'       => true,
-            ],
-            'reset_expires' => [
-                'type'       => 'DATETIME',
-                'null'       => true,
+                'default' => 1,
             ],
             'created_at' => [
                 'type' => 'DATETIME',
@@ -55,12 +51,11 @@ class CreateUsersTable extends Migration
         ]);
 
         $this->forge->addKey('id', true);
-        $this->forge->addUniqueKey('email');
-        $this->forge->createTable('users', true);
+        $this->forge->createTable('drivers', true);
     }
 
     public function down()
     {
-        $this->forge->dropTable('users', true);
+        $this->forge->dropTable('drivers', true);
     }
 }

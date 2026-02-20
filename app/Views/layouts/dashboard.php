@@ -183,7 +183,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark navbar-dashboard fixed-top">
     <div class="container-fluid">
         <a class="navbar-brand" href="<?= site_url('/') ?>">
-            <strong>FoodDash</strong>
+            <strong>🏍️ FoodDash</strong>
         </a>
 
         <button class="btn btn-outline-light d-lg-none" id="fdSidebarToggle" type="button">
@@ -195,9 +195,6 @@
                 <li class="nav-item me-3 d-flex align-items-center text-white-50">
                     <small>Signed in as&nbsp;<strong><?= esc(session('email') ?? 'User') ?></strong></small>
                 </li>
-                <li class="nav-item">
-                    <a href="<?= site_url('logout') ?>" class="btn btn-sm btn-outline-light">Logout</a>
-                </li>
             </ul>
         </div>
     </div>
@@ -205,31 +202,72 @@
 
 <aside class="fd-sidebar" id="fdSidebar">
     <div class="p-3">
-        <div class="mb-3">
+        <div class="mb-4">
             <small class="text-muted text-uppercase">Navigation</small>
         </div>
-        <ul class="nav nav-pills flex-column gap-1">
-            <li class="nav-item">
-                <a href="<?= site_url('dashboard/admin') ?>" class="nav-link fd-nav-link <?= (uri_string() === 'dashboard/admin') ? 'active' : '' ?>">
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="#orders" class="nav-link fd-nav-link">Orders</a>
-            </li>
-            <li class="nav-item">
-                <a href="#drivers" class="nav-link fd-nav-link">Drivers</a>
-            </li>
-            <li class="nav-item">
-                <a href="#restaurants" class="nav-link fd-nav-link">Restaurants</a>
-            </li>
-            <li class="nav-item">
-                <a href="#reports" class="nav-link fd-nav-link">Reports</a>
-            </li>
-            <li class="nav-item">
-                <a href="#users" class="nav-link fd-nav-link">User Management</a>
-            </li>
-        </ul>
+
+        <?php $role = session('role'); ?>
+
+        <?php if ($role === 'admin'): ?>
+            <!-- Admin Navigation -->
+            <ul class="nav nav-pills flex-column gap-1">
+                <li class="nav-item">
+                    <a href="<?= site_url('dashboard/admin') ?>" class="nav-link fd-nav-link <?= (uri_string() === 'dashboard/admin') ? 'active' : '' ?>">
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= site_url('admin/users') ?>" class="nav-link fd-nav-link <?= (str_contains(uri_string(), 'admin/users')) ? 'active' : '' ?>">
+                        Users
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= site_url('admin/restaurants/pending') ?>" class="nav-link fd-nav-link <?= (str_contains(uri_string(), 'admin/restaurants')) ? 'active' : '' ?>">
+                        Restaurant Approvals
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= site_url('admin/drivers/pending') ?>" class="nav-link fd-nav-link <?= (str_contains(uri_string(), 'admin/drivers')) ? 'active' : '' ?>">
+                        Driver Approvals
+                    </a>
+                </li>
+            </ul>
+
+        <?php elseif ($role === 'restaurant'): ?>
+            <!-- Restaurant Navigation -->
+            <ul class="nav nav-pills flex-column gap-1">
+                <li class="nav-item">
+                    <a href="<?= site_url('dashboard/restaurant') ?>" class="nav-link fd-nav-link <?= (uri_string() === 'dashboard/restaurant') ? 'active' : '' ?>">
+                        Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= site_url('menu') ?>" class="nav-link fd-nav-link <?= (str_contains(uri_string(), 'menu')) ? 'active' : '' ?>">
+                        Menu
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="<?= site_url('orders') ?>" class="nav-link fd-nav-link <?= (str_contains(uri_string(), 'orders')) ? 'active' : '' ?>">
+                        Orders
+                    </a>
+                </li>
+            </ul>
+
+        <?php else: ?>
+            <!-- Default Navigation -->
+            <ul class="nav nav-pills flex-column gap-1">
+                <li class="nav-item">
+                    <a href="<?= site_url('dashboard/admin') ?>" class="nav-link fd-nav-link">
+                        Dashboard
+                    </a>
+                </li>
+            </ul>
+        <?php endif; ?>
+
+        <!-- Logout Section -->
+        <div class="mt-4 pt-4 border-top">
+            <a href="<?= site_url('logout') ?>" class="btn btn-outline-danger btn-sm w-100">Logout</a>
+        </div>
     </div>
 </aside>
 

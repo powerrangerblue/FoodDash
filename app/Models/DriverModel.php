@@ -14,8 +14,10 @@ class DriverModel extends Model
     protected $updatedField  = 'updated_at';
 
     protected $allowedFields = [
+        'user_id',
         'name',
         'phone',
+        'status',
         'is_active',
     ];
 

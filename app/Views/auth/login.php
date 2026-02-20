@@ -89,7 +89,7 @@
             <div class="card shadow-sm login-card">
                 <div class="card-body">
                     <div class="text-center mb-3">
-                        <div class="login-logo">FoodDash</div>
+                        <div class="login-logo">🏍️ FoodDash</div>
                         <small class="text-muted">Sign in to your dashboard</small>
                     </div>
 
