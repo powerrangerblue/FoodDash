@@ -30,6 +30,12 @@ class CreateNotificationsTable extends Migration
                 'type' => 'TEXT',
                 'null' => false,
             ],
+            'order_id' => [
+                'type'       => 'INT',
+                'constraint' => 11,
+                'unsigned'   => true,
+                'null'       => true,
+            ],
             'type' => [
                 'type'       => 'VARCHAR',
                 'constraint' => '50',
@@ -44,18 +50,25 @@ class CreateNotificationsTable extends Migration
                 'constraint' => 1,
                 'default'    => 0,
             ],
+            'is_deleted' => [
+                'type'       => 'TINYINT',
+                'constraint' => 1,
+                'default'    => 0,
+            ],
             'created_at' => [
-                'type' => 'DATETIME',
+                'type' => 'TIMESTAMP',
                 'null' => true,
             ],
             'updated_at' => [
-                'type' => 'DATETIME',
+                'type' => 'TIMESTAMP',
                 'null' => true,
             ],
         ]);
 
         $this->forge->addKey('id', true);
         $this->forge->addKey('customer_id');
+        $this->forge->addKey('order_id');
+        $this->forge->addKey(['customer_id', 'is_deleted']);
         $this->forge->addForeignKey('customer_id', 'customers', 'id', 'CASCADE', 'CASCADE');
         $this->forge->createTable('notifications', true);
     }

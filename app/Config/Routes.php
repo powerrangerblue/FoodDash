@@ -173,6 +173,10 @@ $routes->post('api/driver/location.php', 'Api\ProfileController::updateLocation'
 
 // Notifications (Authenticated - Customer)
 $routes->get('api/notifications', 'Api\NotificationsController::index');
+$routes->get('api/notifications/unread-count', 'Api\NotificationsController::unreadCount');
+$routes->post('api/notifications/unread-count', 'Api\NotificationsController::unreadCount');
+$routes->post('api/notifications/(:num)/read', 'Api\NotificationsController::markAsRead/$1');
+$routes->put('api/notifications/(:num)/read', 'Api\NotificationsController::markAsRead/$1');
 $routes->delete('api/notifications', 'Api\NotificationsController::clear');
 $routes->post('api/notifications/clear', 'Api\NotificationsController::clear');
 $routes->delete('api/notifications/(:num)', 'Api\NotificationsController::delete/$1');

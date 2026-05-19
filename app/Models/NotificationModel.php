@@ -14,12 +14,15 @@ class NotificationModel extends Model
     protected $updatedField  = 'updated_at';
 
     protected $allowedFields = [
+        'user_id',
         'customer_id',
+        'order_id',
         'title',
         'message',
         'type',
         'data',
         'is_read',
+        'is_deleted',
     ];
 
     protected $returnType = 'array';
