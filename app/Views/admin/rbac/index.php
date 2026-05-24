@@ -180,7 +180,8 @@
     // Admin-specific permission keys — selecting any of these auto-sets scope to 'admin'
     const ADMIN_PERMISSION_KEYS = [
         'access_admin_dashboard', 'manage_roles', 'manage_staff_accounts',
-        'manage_restaurant_information', 'manage_drivers', 'view_orders'
+        'manage_restaurant_information', 'manage_drivers', 'view_orders',
+        'manage_admin_mfa', 'view_security_monitor'
     ];
 
     function autoDetectScope() {
