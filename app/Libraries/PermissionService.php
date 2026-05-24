@@ -21,6 +21,7 @@ class PermissionService
         'restaurant' => [
             'orders' => ['read', 'update'],
             'menus' => ['read', 'write', 'update', 'delete'],
+            'sales' => ['read'],
             'profile' => ['read', 'update'],
         ],
         'driver' => [
@@ -46,6 +47,9 @@ class PermissionService
             'write' => 'manage_menu_items',
             'update' => 'manage_menu_items',
             'delete' => 'manage_menu_items',
+        ],
+        'sales' => [
+            'read' => 'view_sales_reports',
         ],
         'users' => [
             'read' => 'manage_staff_accounts',
@@ -127,8 +131,11 @@ class PermissionService
             $permissionKeys = $this->permissionsForRoleId((int) $roleRow['id']);
 
             $roleScope = strtolower(trim((string) ($roleRow['scope'] ?? '')));
-            if ($roleScope === 'admin' && ! in_array('access_admin_dashboard', $permissionKeys, true)) {
-                array_unshift($permissionKeys, 'access_admin_dashboard');
+            if ($isSystemRole) {
+                $permissionKeys = array_values(array_unique(array_merge(
+                    $permissionKeys,
+                    $this->legacyPermissionsForRole($legacyRole)
+                )));
             }
 
             // For system roles only: if the role_permissions table has no entries
@@ -150,7 +157,7 @@ class PermissionService
         return [
             'role_id'           => $roleRow ? (int) $roleRow['id'] : $userRoleId,
             'role_scope'        => (string) ($roleRow['scope'] ?? $legacyRole),
-            'role_name'         => (string) ($roleRow['name'] ?? ucfirst($legacyRole)),
+            'role_name'         => (string) ($roleRow['name'] ?? ($legacyRole === 'restaurant' ? 'Restaurant Owner' : ucfirst($legacyRole))),
             'role_slug'         => (string) ($roleRow['slug'] ?? $legacyRole),
             'permission_keys'   => $permissionKeys,
             'permission_labels' => $this->labelsForPermissionKeys($permissionKeys),
@@ -185,9 +192,18 @@ class PermissionService
             $sessionData = [];
         }
         if (array_key_exists('permission_keys', $sessionData) && is_array($sessionData['permission_keys']) && $sessionData['permission_keys'] !== []) {
-            $keys = $sessionData['permission_keys'];
+            $keys = array_values(array_unique(array_map(static fn ($key): string => strtolower(trim((string) $key)), $sessionData['permission_keys'])));
 
-            return array_values(array_unique(array_map(static fn ($key): string => strtolower(trim((string) $key)), $keys)));
+            $roleId = isset($sessionData['role_id']) && is_numeric($sessionData['role_id']) ? (int) $sessionData['role_id'] : null;
+            if ($roleId !== null && $this->tableExists('roles')) {
+                $roleRow = (new RoleModel())->find($roleId);
+                if ($roleRow && (int) ($roleRow['is_system'] ?? 0) === 1) {
+                    $legacyRole = strtolower(trim((string) ($sessionData['role'] ?? $roleRow['scope'] ?? 'restaurant')));
+                    $keys = array_values(array_unique(array_merge($keys, $this->legacyPermissionsForRole($legacyRole))));
+                }
+            }
+
+            return $keys;
         }
 
         // Session has no permission_keys (or is empty). Re-resolve from the DB via
@@ -268,8 +284,11 @@ class PermissionService
             ['permission_key' => 'manage_restaurant_information', 'label' => 'Manage Restaurant Approvals', 'module' => 'Admin', 'description' => 'Review and approve pending restaurant registrations', 'sort_order' => 40],
             ['permission_key' => 'manage_drivers', 'label' => 'Manage Driver Approvals', 'module' => 'Admin', 'description' => 'Review and approve pending driver registrations', 'sort_order' => 50],
             ['permission_key' => 'view_orders', 'label' => 'View Order History', 'module' => 'Admin', 'description' => 'View delivered and completed orders on the admin panel', 'sort_order' => 60],
+            ['permission_key' => 'manage_admin_mfa', 'label' => 'MFA Settings', 'module' => 'Admin', 'description' => 'Open and update the admin MFA settings page', 'sort_order' => 70],
+            ['permission_key' => 'view_security_monitor', 'label' => 'Security Monitor', 'module' => 'Admin', 'description' => 'Open the security monitoring page and reports', 'sort_order' => 80],
             // Restaurant dashboard features
             ['permission_key' => 'manage_menu_items', 'label' => 'Manage Menu Items', 'module' => 'Restaurant', 'description' => 'Create, edit, publish, and delete menu items', 'sort_order' => 70],
+            ['permission_key' => 'view_sales_reports', 'label' => 'Sales', 'module' => 'Restaurant', 'description' => 'Open the restaurant sales dashboard and export reports', 'sort_order' => 75],
             ['permission_key' => 'accept_reject_orders', 'label' => 'Accept or Reject Orders', 'module' => 'Restaurant', 'description' => 'Approve or decline incoming customer orders', 'sort_order' => 80],
             ['permission_key' => 'prepare_orders', 'label' => 'Prepare Orders', 'module' => 'Restaurant', 'description' => 'Move orders into the preparation/kitchen flow', 'sort_order' => 90],
             ['permission_key' => 'update_order_status', 'label' => 'Update Order Status', 'module' => 'Restaurant', 'description' => 'Advance order status during fulfillment', 'sort_order' => 100],
@@ -299,9 +318,10 @@ class PermissionService
             'admin' => [
                 'access_admin_dashboard', 'manage_roles', 'manage_staff_accounts',
                 'manage_restaurant_information', 'manage_drivers', 'view_orders',
+                'manage_admin_mfa', 'view_security_monitor',
             ],
             'restaurant' => [
-                'manage_menu_items', 'accept_reject_orders', 'prepare_orders',
+                'manage_menu_items', 'view_sales_reports', 'accept_reject_orders', 'prepare_orders',
                 'update_order_status', 'view_orders', 'manage_restaurant_information',
             ],
             'driver' => ['view_orders', 'update_order_status'],

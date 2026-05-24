@@ -101,8 +101,9 @@ class AdminRbac extends BaseController
         // Server-side scope auto-detection: if scope wasn't sent correctly from the
         // form, derive it from the selected permissions so roles are never mis-scoped.
         $adminOnlyKeys = ['access_admin_dashboard', 'manage_roles', 'manage_staff_accounts',
-                          'manage_restaurant_information', 'manage_drivers', 'view_orders'];
-        $restaurantOnlyKeys = ['manage_menu_items', 'accept_reject_orders', 'prepare_orders', 'update_order_status'];
+                  'manage_restaurant_information', 'manage_drivers', 'view_orders',
+                  'manage_admin_mfa', 'view_security_monitor'];
+        $restaurantOnlyKeys = ['manage_menu_items', 'view_sales_reports', 'accept_reject_orders', 'prepare_orders', 'update_order_status'];
         $hasAdmin      = array_intersect($permissionKeys, $adminOnlyKeys) !== [];
         $hasRestaurant = array_intersect($permissionKeys, $restaurantOnlyKeys) !== [];
 
