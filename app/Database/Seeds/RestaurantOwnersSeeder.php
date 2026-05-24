@@ -33,17 +33,37 @@ class RestaurantOwnersSeeder extends Seeder
                         'status'  => 'approved',
                         'is_active' => 1,
                         ]);
+                    if ((int) ($user['restaurant_id'] ?? 0) !== (int) $existing['id']) {
+                        $userModel->update($user['id'], ['restaurant_id' => (int) $existing['id']]);
+                    }
                     continue;
                 }
 
                 if (! $existing) {
-                    $restaurantModel->insert([
+                    $restaurantId = $restaurantModel->insert([
                         'user_id' => $user['id'],
                         'name'    => $restaurantName,
                         'status'  => 'approved',
                         'is_active' => 1,
-                    ]);
+                    ], true);
+
+                    if ($restaurantId) {
+                        $userModel->update($user['id'], ['restaurant_id' => (int) $restaurantId]);
+                    }
                 }
+            }
+        }
+
+        // Ensure any pre-existing owner accounts still point to their restaurant record.
+        foreach (array_keys($emails) as $email) {
+            $user = $userModel->where('email', $email)->first();
+            if (! $user) {
+                continue;
+            }
+
+            $restaurant = $restaurantModel->where('user_id', $user['id'])->first();
+            if ($restaurant && (int) ($user['restaurant_id'] ?? 0) !== (int) $restaurant['id']) {
+                $userModel->update($user['id'], ['restaurant_id' => (int) $restaurant['id']]);
             }
         }
 
