@@ -608,6 +608,22 @@
                     </a>
                 </li>
                 <?php endif; ?>
+                <?php if (in_array('manage_admin_mfa', $sessionPermissions, true)): ?>
+                <li class="nav-item">
+                    <a href="<?= site_url('dashboard/admin/mfa') ?>" class="nav-link fd-nav-link <?= (str_contains(uri_string(), 'dashboard/admin/mfa')) ? 'active' : '' ?>">
+                        <span class="fd-nav-icon">🔐</span>
+                        <span class="fd-nav-label">MFA Settings</span>
+                    </a>
+                </li>
+                <?php endif; ?>
+                <?php if (in_array('view_security_monitor', $sessionPermissions, true)): ?>
+                <li class="nav-item">
+                    <a href="<?= site_url('dashboard/admin/security') ?>" class="nav-link fd-nav-link <?= (str_contains(uri_string(), 'dashboard/admin/security')) ? 'active' : '' ?>">
+                        <span class="fd-nav-icon">🛡️</span>
+                        <span class="fd-nav-label">Security Monitor</span>
+                    </a>
+                </li>
+                <?php endif; ?>
                 <?php $activeTab = (string) (service('request')->getGet('tab') ?? ''); ?>
                 <?php if (in_array('manage_roles', $sessionPermissions, true)): ?>
                     <li class="nav-item">
@@ -691,6 +707,12 @@
                     </a>
                 </li>
                 <?php endif; ?>
+                <li class="nav-item">
+                    <a href="<?= site_url('sales') ?>" class="nav-link fd-nav-link <?= (uri_string() === 'sales') ? 'active' : '' ?>">
+                        <span class="fd-nav-icon">📈</span>
+                        <span class="fd-nav-label">Sales</span>
+                    </a>
+                </li>
                 <?php if (in_array('manage_restaurant_information', $sessionPermissions, true)): ?>
                 <li class="nav-item">
                     <a href="<?= site_url('settings') ?>" class="nav-link fd-nav-link <?= (str_contains(uri_string(), 'settings')) ? 'active' : '' ?>">

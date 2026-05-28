@@ -30,6 +30,11 @@ final class PermissionServiceTest extends CIUnitTestCase
         $this->assertFalse($this->permissions->allows('restaurant', 'orders', 'delete'));
     }
 
+    public function testRestaurantCanReadSalesReports(): void
+    {
+        $this->assertTrue($this->permissions->allows('restaurant', 'sales', 'read'));
+    }
+
     public function testCustomerCanCreateOrdersButCannotDelete(): void
     {
         $this->assertTrue($this->permissions->allows('customer', 'orders', 'write'));

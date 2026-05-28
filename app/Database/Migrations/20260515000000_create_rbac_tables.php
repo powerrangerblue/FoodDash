@@ -259,11 +259,14 @@ class CreateRbacTables extends Migration
             ['permission_key' => 'manage_restaurant_information', 'label' => 'Manage Restaurant Approvals', 'module' => 'Admin', 'description' => 'Review and approve pending restaurant registrations', 'sort_order' => 40],
             ['permission_key' => 'manage_drivers', 'label' => 'Manage Driver Approvals', 'module' => 'Admin', 'description' => 'Review and approve pending driver registrations', 'sort_order' => 50],
             ['permission_key' => 'view_orders', 'label' => 'View Order History', 'module' => 'Admin', 'description' => 'View delivered and completed orders on the admin panel', 'sort_order' => 60],
+            ['permission_key' => 'manage_admin_mfa', 'label' => 'MFA Settings', 'module' => 'Admin', 'description' => 'Open and update the admin MFA settings page', 'sort_order' => 70],
+            ['permission_key' => 'view_security_monitor', 'label' => 'Security Monitor', 'module' => 'Admin', 'description' => 'Open the security monitoring page and reports', 'sort_order' => 80],
             // Restaurant dashboard permissions
-            ['permission_key' => 'manage_menu_items', 'label' => 'Manage Menu Items', 'module' => 'Restaurant', 'description' => 'Create, edit, publish, and delete menu items', 'sort_order' => 70],
-            ['permission_key' => 'accept_reject_orders', 'label' => 'Accept or Reject Orders', 'module' => 'Restaurant', 'description' => 'Approve or decline incoming customer orders', 'sort_order' => 80],
-            ['permission_key' => 'prepare_orders', 'label' => 'Prepare Orders', 'module' => 'Restaurant', 'description' => 'Move orders into the preparation/kitchen flow', 'sort_order' => 90],
-            ['permission_key' => 'update_order_status', 'label' => 'Update Order Status', 'module' => 'Restaurant', 'description' => 'Advance order status during fulfillment', 'sort_order' => 100],
+            ['permission_key' => 'manage_menu_items', 'label' => 'Manage Menu Items', 'module' => 'Restaurant', 'description' => 'Create, edit, publish, and delete menu items', 'sort_order' => 90],
+            ['permission_key' => 'view_sales_reports', 'label' => 'Sales', 'module' => 'Restaurant', 'description' => 'Open the restaurant sales dashboard and export reports', 'sort_order' => 95],
+            ['permission_key' => 'accept_reject_orders', 'label' => 'Accept or Reject Orders', 'module' => 'Restaurant', 'description' => 'Approve or decline incoming customer orders', 'sort_order' => 100],
+            ['permission_key' => 'prepare_orders', 'label' => 'Prepare Orders', 'module' => 'Restaurant', 'description' => 'Move orders into the preparation/kitchen flow', 'sort_order' => 110],
+            ['permission_key' => 'update_order_status', 'label' => 'Update Order Status', 'module' => 'Restaurant', 'description' => 'Advance order status during fulfillment', 'sort_order' => 120],
         ];
 
         $now = date('Y-m-d H:i:s');
@@ -296,16 +299,17 @@ class CreateRbacTables extends Migration
                 'permissions' => [
                     'access_admin_dashboard', 'manage_roles', 'manage_staff_accounts',
                     'manage_restaurant_information', 'manage_drivers', 'view_orders',
+                    'manage_admin_mfa', 'view_security_monitor',
                 ],
             ],
             [
-                'name' => 'Restaurant Team Member',
+                'name' => 'Restaurant Owner',
                 'slug' => 'restaurant',
                 'scope' => 'restaurant',
-                'description' => 'Default restaurant operations role',
+                'description' => 'Default restaurant owner role with full restaurant access',
                 'is_system' => 1,
                     'permissions' => [
-                        'manage_menu_items', 'accept_reject_orders', 'prepare_orders',
+                        'manage_menu_items', 'view_sales_reports', 'accept_reject_orders', 'prepare_orders',
                         'update_order_status', 'view_orders', 'manage_restaurant_information',
                     ],
             ],

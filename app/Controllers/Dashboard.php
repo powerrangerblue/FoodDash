@@ -44,7 +44,7 @@ class Dashboard extends BaseController
         }
 
         $permissions = new \App\Libraries\PermissionService();
-        if (! $permissions->hasPermission('access_admin_dashboard')) {
+        if (! $permissions->hasPermission('manage_admin_mfa')) {
             return view('errors/unauthorized', ['message' => 'Permission denied']);
         }
 
@@ -63,7 +63,7 @@ class Dashboard extends BaseController
         }
 
         $permissions = new \App\Libraries\PermissionService();
-        if (! $permissions->hasPermission('access_admin_dashboard')) {
+        if (! $permissions->hasPermission('manage_admin_mfa')) {
             return view('errors/unauthorized', ['message' => 'Permission denied']);
         }
 
@@ -89,6 +89,266 @@ class Dashboard extends BaseController
         }
 
         return view('dashboard/restaurant');
+    }
+
+    public function sales()
+    {
+        $session = session();
+        if (! $session->get('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        if ($session->get('role') !== 'restaurant') {
+            return redirect()->to('/login')->with('error', 'Unauthorized');
+        }
+
+        $permissions = new \App\Libraries\PermissionService();
+        if (! $permissions->hasPermission('view_sales_reports')) {
+            return view('errors/unauthorized', ['message' => 'Permission denied']);
+        }
+
+        $restaurantId = (int) ($session->get('restaurant_id') ?? 0);
+        if ($restaurantId <= 0) {
+            return view('errors/unauthorized', ['message' => 'Restaurant context not found']);
+        }
+
+        $range = strtolower(trim((string) ($this->request->getGet('range') ?? 'this_month')));
+        $startDate = trim((string) ($this->request->getGet('start_date') ?? ''));
+        $endDate = trim((string) ($this->request->getGet('end_date') ?? ''));
+        $export = strtolower(trim((string) ($this->request->getGet('export') ?? '')));
+
+        $report = $this->buildRestaurantSalesReport($restaurantId, $range, $startDate, $endDate);
+
+        if ($export === 'csv') {
+            return $this->exportRestaurantSalesCsv($report);
+        }
+
+        if ($export === 'pdf') {
+            return $this->exportRestaurantSalesPdf($report);
+        }
+
+        return view('restaurant/sales', $report);
+    }
+
+    protected function buildRestaurantSalesReport(int $restaurantId, string $range, string $startDate, string $endDate): array
+    {
+        $rangeInfo = $this->resolveSalesRange($range, $startDate, $endDate);
+        $selectedStart = $rangeInfo['start'];
+        $selectedEnd = $rangeInfo['end'];
+        $selectedLabel = $rangeInfo['label'];
+        $selectedRange = $rangeInfo['range'];
+
+        $now = date('Y-m-d H:i:s');
+        $todayStart = date('Y-m-d') . ' 00:00:00';
+        $weekStart = date('Y-m-d', strtotime('monday this week')) . ' 00:00:00';
+        $monthStart = date('Y-m-01') . ' 00:00:00';
+        $lifetimeStart = '1970-01-01 00:00:00';
+
+        $summaryCards = [
+            'daily' => $this->summarizeSalesWindow($restaurantId, $todayStart, $now),
+            'weekly' => $this->summarizeSalesWindow($restaurantId, $weekStart, $now),
+            'monthly' => $this->summarizeSalesWindow($restaurantId, $monthStart, $now),
+            'lifetime' => $this->summarizeSalesWindow($restaurantId, $lifetimeStart, $now),
+        ];
+
+        $selectedSummary = $this->summarizeSalesWindow($restaurantId, $selectedStart, $selectedEnd);
+        $transactions = $this->fetchSalesTransactions($restaurantId, $selectedStart, $selectedEnd);
+        $trendSeries = $this->buildSalesTrendSeries($restaurantId, $selectedStart, $selectedEnd);
+        $comparisonSeries = $this->buildSalesComparisonSeries($trendSeries);
+
+        $restaurantName = trim((string) (session('restaurant_name') ?? ''));
+        if ($restaurantName === '') {
+            $restaurantRow = (new RestaurantModel())->select('name')->find($restaurantId);
+            $restaurantName = (string) ($restaurantRow['name'] ?? 'Restaurant');
+        }
+
+        $queryBase = [
+            'range' => $selectedRange,
+        ];
+
+        if ($selectedRange === 'custom') {
+            $queryBase['start_date'] = substr($selectedStart, 0, 10);
+            $queryBase['end_date'] = substr($selectedEnd, 0, 10);
+        }
+
+        return [
+            'restaurantName' => $restaurantName,
+            'generatedAt' => date('M d, Y h:i A'),
+            'selectedRange' => $selectedRange,
+            'selectedRangeLabel' => $selectedLabel,
+            'selectedStartDate' => substr($selectedStart, 0, 10),
+            'selectedEndDate' => substr($selectedEnd, 0, 10),
+            'queryBase' => $queryBase,
+            'summaryCards' => $summaryCards,
+            'selectedSummary' => $selectedSummary,
+            'transactions' => $transactions,
+            'trendLabels' => array_column($trendSeries, 'label'),
+            'trendValues' => array_map(static fn (array $row): float => (float) ($row['revenue'] ?? 0), $trendSeries),
+            'trendOrders' => array_map(static fn (array $row): int => (int) ($row['orders'] ?? 0), $trendSeries),
+            'comparisonLabels' => array_column($comparisonSeries, 'label'),
+            'comparisonValues' => array_map(static fn (array $row): float => (float) ($row['revenue'] ?? 0), $comparisonSeries),
+        ];
+    }
+
+    protected function resolveSalesRange(string $range, string $startDate, string $endDate): array
+    {
+        $range = strtolower(trim($range));
+        $now = date('Y-m-d H:i:s');
+
+        if ($range === 'today') {
+            $start = date('Y-m-d') . ' 00:00:00';
+            $end = $now;
+            $label = 'Today';
+        } elseif ($range === 'this_week') {
+            $start = date('Y-m-d', strtotime('monday this week')) . ' 00:00:00';
+            $end = $now;
+            $label = 'This Week';
+        } elseif ($range === 'this_month') {
+            $start = date('Y-m-01') . ' 00:00:00';
+            $end = $now;
+            $label = 'This Month';
+        } else {
+            $startDate = $startDate !== '' ? $startDate : date('Y-m-01');
+            $endDate = $endDate !== '' ? $endDate : date('Y-m-d');
+
+            if (strtotime($startDate) !== false && strtotime($endDate) !== false && strtotime($startDate) > strtotime($endDate)) {
+                [$startDate, $endDate] = [$endDate, $startDate];
+            }
+
+            $start = $startDate . ' 00:00:00';
+            $end = $endDate . ' 23:59:59';
+            $label = 'Custom Range';
+            $range = 'custom';
+        }
+
+        return [
+            'range' => $range,
+            'start' => $start,
+            'end' => $end,
+            'label' => $label,
+        ];
+    }
+
+    protected function summarizeSalesWindow(int $restaurantId, string $startDate, string $endDate): array
+    {
+        $row = (new OrderModel())
+            ->select('IFNULL(SUM(total_amount), 0) AS revenue, COUNT(*) AS orders')
+            ->where('restaurant_id', $restaurantId)
+            ->where('status', 'delivered')
+            ->where('created_at >=', $startDate)
+            ->where('created_at <=', $endDate)
+            ->first();
+
+        return [
+            'revenue' => (float) ($row['revenue'] ?? 0),
+            'orders' => (int) ($row['orders'] ?? 0),
+        ];
+    }
+
+    protected function fetchSalesTransactions(int $restaurantId, string $startDate, string $endDate): array
+    {
+        return (new OrderModel())
+            ->select('id, order_number, customer_name, payment_method, status, total_amount, created_at')
+            ->where('restaurant_id', $restaurantId)
+            ->where('status', 'delivered')
+            ->where('created_at >=', $startDate)
+            ->where('created_at <=', $endDate)
+            ->orderBy('created_at', 'DESC')
+            ->findAll();
+    }
+
+    protected function buildSalesTrendSeries(int $restaurantId, string $startDate, string $endDate): array
+    {
+        $db = db_connect();
+        $rows = $db->table('orders')
+            ->select('DATE(created_at) AS sale_date, IFNULL(SUM(total_amount), 0) AS revenue, COUNT(*) AS orders')
+            ->where('restaurant_id', $restaurantId)
+            ->where('status', 'delivered')
+            ->where('created_at >=', $startDate)
+            ->where('created_at <=', $endDate)
+            ->groupBy('DATE(created_at)')
+            ->orderBy('sale_date', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        $lookup = [];
+        foreach ($rows as $row) {
+            $lookup[(string) ($row['sale_date'] ?? '')] = [
+                'revenue' => (float) ($row['revenue'] ?? 0),
+                'orders' => (int) ($row['orders'] ?? 0),
+            ];
+        }
+
+        $series = [];
+        $cursor = new \DateTimeImmutable(substr($startDate, 0, 10));
+        $endCursor = new \DateTimeImmutable(substr($endDate, 0, 10));
+
+        while ($cursor <= $endCursor) {
+            $dateKey = $cursor->format('Y-m-d');
+            $series[] = [
+                'date' => $dateKey,
+                'label' => $cursor->format('M j'),
+                'revenue' => $lookup[$dateKey]['revenue'] ?? 0.0,
+                'orders' => $lookup[$dateKey]['orders'] ?? 0,
+            ];
+            $cursor = $cursor->modify('+1 day');
+        }
+
+        return $series;
+    }
+
+    protected function buildSalesComparisonSeries(array $trendSeries): array
+    {
+        usort($trendSeries, static function (array $left, array $right): int {
+            return ($right['revenue'] ?? 0) <=> ($left['revenue'] ?? 0);
+        });
+
+        return array_slice($trendSeries, 0, 7);
+    }
+
+    protected function exportRestaurantSalesCsv(array $report)
+    {
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, "\xEF\xBB\xBF");
+        fputcsv($handle, ['Order ID', 'Customer', 'Date', 'Payment Method', 'Total Amount', 'Order Status']);
+
+        foreach ($report['transactions'] as $transaction) {
+            fputcsv($handle, [
+                $transaction['order_number'] ?? $transaction['id'] ?? '',
+                $transaction['customer_name'] ?? '',
+                isset($transaction['created_at']) ? date('Y-m-d', strtotime((string) $transaction['created_at'])) : '',
+                $transaction['payment_method'] ?? '',
+                number_format((float) ($transaction['total_amount'] ?? 0), 2, '.', ''),
+                $transaction['status'] ?? '',
+            ]);
+        }
+
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        $filename = 'restaurant_sales_' . date('Ymd_His') . '.csv';
+
+        return $this->response
+            ->setHeader('Content-Type', 'text/csv; charset=UTF-8')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setBody($csv ?: '');
+    }
+
+    protected function exportRestaurantSalesPdf(array $report)
+    {
+        $html = view('restaurant/sales_pdf', $report);
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+
+        $filename = 'restaurant_sales_' . date('Ymd_His') . '.pdf';
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->setBody($dompdf->output());
     }
 
     public function adminOrders()
@@ -138,7 +398,7 @@ class Dashboard extends BaseController
         }
 
         $permissions = new \App\Libraries\PermissionService();
-        if (!$permissions->hasPermission('access_admin_dashboard')) {
+        if (! $permissions->hasPermission('view_security_monitor')) {
             return $this->response->setStatusCode(403)->setJSON(['error' => 'Permission denied']);
         }
 
@@ -223,7 +483,7 @@ class Dashboard extends BaseController
         }
 
         $permissions = new \App\Libraries\PermissionService();
-        if (!$permissions->hasPermission('access_admin_dashboard')) {
+        if (!$permissions->hasPermission('view_security_monitor')) {
             return view('errors/unauthorized', ['message' => 'Permission denied']);
         }
 
@@ -238,7 +498,7 @@ class Dashboard extends BaseController
         }
 
         $permissions = new \App\Libraries\PermissionService();
-        if (!$permissions->hasPermission('access_admin_dashboard')) {
+        if (!$permissions->hasPermission('view_security_monitor')) {
             return $this->response->setStatusCode(403)->setJSON(['error' => 'Permission denied']);
         }
 
@@ -372,7 +632,7 @@ class Dashboard extends BaseController
         }
 
         $permissions = new \App\Libraries\PermissionService();
-        if (!$permissions->hasPermission('access_admin_dashboard')) {
+        if (!$permissions->hasPermission('view_security_monitor')) {
             return $this->response->setStatusCode(403)->setJSON(['error' => 'Permission denied']);
         }
 

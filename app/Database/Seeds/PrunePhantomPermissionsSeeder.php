@@ -20,7 +20,6 @@ class PrunePhantomPermissionsSeeder extends Seeder
         // 1. Remove permissions whose dashboard pages do NOT exist yet
         // ------------------------------------------------------------------ //
         $toRemove = [
-            'view_sales_reports',
             'access_analytics',
             'manage_payments',
             'manage_customers',
@@ -49,10 +48,13 @@ class PrunePhantomPermissionsSeeder extends Seeder
             'manage_restaurant_information' => ['label' => 'Manage Restaurant Approvals', 'description' => 'Review and approve pending restaurant registrations',      'module' => 'Admin',      'sort_order' => 40],
             'manage_drivers'                => ['label' => 'Manage Driver Approvals',     'description' => 'Review and approve pending driver registrations',          'module' => 'Admin',      'sort_order' => 50],
             'view_orders'                   => ['label' => 'View Order History',          'description' => 'View delivered and completed orders on the admin panel',   'module' => 'Admin',      'sort_order' => 60],
-            'manage_menu_items'             => ['label' => 'Manage Menu Items',           'description' => 'Create, edit, publish, and delete menu items',             'module' => 'Restaurant', 'sort_order' => 70],
-            'accept_reject_orders'          => ['label' => 'Accept or Reject Orders',     'description' => 'Approve or decline incoming customer orders',              'module' => 'Restaurant', 'sort_order' => 80],
-            'prepare_orders'                => ['label' => 'Prepare Orders',              'description' => 'Move orders into the preparation/kitchen flow',            'module' => 'Restaurant', 'sort_order' => 90],
-            'update_order_status'           => ['label' => 'Update Order Status',         'description' => 'Advance order status during fulfillment',                  'module' => 'Restaurant', 'sort_order' => 100],
+            'manage_admin_mfa'              => ['label' => 'MFA Settings',               'description' => 'Open and update the admin MFA settings page',             'module' => 'Admin',      'sort_order' => 70],
+            'view_security_monitor'         => ['label' => 'Security Monitor',           'description' => 'Open the security monitoring page and reports',          'module' => 'Admin',      'sort_order' => 80],
+            'manage_menu_items'             => ['label' => 'Manage Menu Items',           'description' => 'Create, edit, publish, and delete menu items',             'module' => 'Restaurant', 'sort_order' => 90],
+            'view_sales_reports'            => ['label' => 'Sales',                     'description' => 'Open the restaurant sales dashboard',                     'module' => 'Restaurant', 'sort_order' => 95],
+            'accept_reject_orders'          => ['label' => 'Accept or Reject Orders',     'description' => 'Approve or decline incoming customer orders',              'module' => 'Restaurant', 'sort_order' => 100],
+            'prepare_orders'                => ['label' => 'Prepare Orders',              'description' => 'Move orders into the preparation/kitchen flow',            'module' => 'Restaurant', 'sort_order' => 110],
+            'update_order_status'           => ['label' => 'Update Order Status',         'description' => 'Advance order status during fulfillment',                  'module' => 'Restaurant', 'sort_order' => 120],
         ];
 
         foreach ($updates as $key => $data) {
@@ -65,8 +67,8 @@ class PrunePhantomPermissionsSeeder extends Seeder
         // 3. Re-sync the two built-in system roles
         // ------------------------------------------------------------------ //
         $systemRoles = [
-            'admin'      => ['access_admin_dashboard', 'manage_roles', 'manage_staff_accounts', 'manage_restaurant_information', 'manage_drivers', 'view_orders'],
-            'restaurant' => ['manage_menu_items', 'accept_reject_orders', 'prepare_orders', 'update_order_status', 'view_orders', 'manage_restaurant_information'],
+            'admin'      => ['access_admin_dashboard', 'manage_roles', 'manage_staff_accounts', 'manage_restaurant_information', 'manage_drivers', 'view_orders', 'manage_admin_mfa', 'view_security_monitor'],
+            'restaurant' => ['manage_menu_items', 'view_sales_reports', 'accept_reject_orders', 'prepare_orders', 'update_order_status', 'view_orders', 'manage_restaurant_information'],
         ];
 
         foreach ($systemRoles as $slug => $permKeys) {

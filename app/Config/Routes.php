@@ -32,6 +32,7 @@ $routes->post('dashboard/admin/mfa', 'Dashboard::updateAdminMfa');
 $routes->get('dashboard/restaurant', 'Dashboard::restaurant');
 $routes->get('dashboard/admin/orders', 'Dashboard::adminOrdersHistory');
 $routes->get('dashboard/admin/orders/history', 'Dashboard::adminOrdersHistory');
+$routes->get('sales', 'Dashboard::sales');
 
 // Admin data endpoints
 $routes->get('dashboard/admin/data', 'Dashboard::adminData');
