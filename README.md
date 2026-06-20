@@ -1,61 +1,100 @@
-# CodeIgniter 4 Framework
+# FoodDash
 
-## What is CodeIgniter?
+🚀 FoodDash is a lightweight, extensible food ordering and delivery platform built on CodeIgniter 4.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+This repository contains the web application (admin, restaurant, and API) and supporting code used by the FoodDash service. The project includes mobile clients for customers and riders developed in Android Studio.
 
-This repository holds the distributable version of the framework.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+Key links:
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+- Android mobile apps (customer & rider): https://github.com/codex-xx/FOODDASH-ANDROID.git 📱
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+**Highlights**
 
-## Important Change with index.php
+- Modern CodeIgniter 4 PHP backend for admin, restaurants, and API.
+- Mobile-first experience with dedicated Android apps for customers and riders.
+- Maps & routing using Leaflet + OpenStreetMap for both mobile and web (admin/restaurant views) 🗺️
+- Database migrations supported (preferred) — avoid importing raw SQL dumps; use the framework migrations instead for portability and versioning 🔁
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+**Tech stack**
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+- Backend: PHP (CodeIgniter 4)
+- Database: MySQL (we recommend running MySQL via XAMPP for local development) 🐘
+- Mobile: Android (Android Studio) — see linked Android repo
+- Maps: Leaflet + OpenStreetMap
 
-**Please** read the user guide for a better explanation of how CI4 works!
+Requirements
 
-## Repository Management
+- PHP 8.2+ with intl and mbstring extensions
+- MySQL (XAMPP recommended for local dev)
+- Composer
+- Android Studio for mobile app development
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+Quick setup (local)
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+1. Clone the repository:
 
-## Contributing
+```bash
+git clone https://github.com/powerrangerblue/FoodDash.git
+cd FoodDash
+```
 
-We welcome contributions from the community.
+2. Start XAMPP and ensure MySQL is running. Create an empty database for FoodDash (e.g., `fooddash_dev`).
 
-Please read the [*Contributing to CodeIgniter*](https://github.com/codeigniter4/CodeIgniter4/blob/develop/CONTRIBUTING.md) section in the development repository.
+3. Copy and update configuration files as needed (example files are in `app/Config/`).
 
-## Server Requirements
+4. Install PHP dependencies with Composer:
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+```bash
+composer install
+```
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+5. Configure database credentials in `app/Config/Database.php` (or via environment variables).
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+6. Run framework migrations (preferred over importing SQL):
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+```bash
+php spark migrate
+```
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+Notes on migration vs SQL import
+
+- Use `php spark migrate` to run CodeIgniter migrations so schema changes are versioned and reproducible across environments. This repository includes migration scripts under the `database/` folder — do not rely on manual SQL dumps for production migration workflows.
+
+Android mobile apps
+
+- Customer and Rider apps are maintained in a separate repository: https://github.com/codex-xx/FOODDASH-ANDROID.git
+- The Android apps use Leaflet/OpenStreetMap for maps and integrate with the backend APIs exposed by this project.
+
+Maps & geolocation
+
+- Web and mobile maps are implemented using Leaflet and OpenStreetMap tiles. Map-related frontend code lives in `public/js/` and mobile map code is in the Android repo.
+
+Folder overview
+
+- `app/` — application code: controllers, models, views, config and helpers.
+- `public/` — web root: `index.php`, assets, JS/CSS, uploads and `api/` endpoints.
+- `system/` — CodeIgniter core files (framework).
+- `database/` — migration scripts and SQL schemas (for reference). Use migrations under `database/`.
+- `writable/` — runtime writable storage: `logs/`, `cache/`, `uploads/`, `session/`.
+- `PHPMailer/` — included mail library used by the project.
+- `tests/` — automated tests and test helpers.
+
+Deployment & production notes
+
+- Point your webserver (Apache/nginx) to the `public/` folder — never the project root.
+- Secure environment variables and keep credentials out of source control.
+- Use the built-in `spark` CLI for maintenance tasks (migrations, seeds, etc.).
+
+Contributing
+
+We welcome contributions. Please open issues or PRs describing bug fixes, improvements, or feature proposals. Follow standard GitHub workflows and add tests where appropriate.
+
+License
+
+This project includes the CodeIgniter 4 distribution and other components; see the `LICENSE` file for details.
+
+Contact
+
+For questions or support, open an issue in this repository or reach out to the maintainers.
+
+Thank you for using FoodDash! 🍽️
